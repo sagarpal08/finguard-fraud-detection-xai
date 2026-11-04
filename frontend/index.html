@@ -1,0 +1,299 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinGuard Enterprise — Real-Time Risk & Fraud Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-cyan-500 selection:text-white pb-12">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 font-bold text-lg">
+          🛡️
+        </div>
+        <div>
+          <h1 class="font-bold tracking-tight text-slate-100 flex items-center gap-2">
+            FinGuard AI <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Production v2.4</span>
+          </h1>
+          <p class="text-xs text-slate-400">Real-Time Risk Decision Engine & Explainable AI</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 text-xs">
+        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Model: XGBoost + TreeSHAP Active
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-6 mt-8 space-y-6">
+
+    <!-- Scenario Presets Bar -->
+    <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center gap-2 text-sm font-medium text-slate-300">
+        <span>⚡ Quick Scenario Presets:</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="loadPreset('normal')" class="px-3 py-1.5 text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 hover:border-emerald-500/50 hover:text-emerald-400 rounded-xl transition">
+          ✅ Routine Groceries ($65)
+        </button>
+        <button onclick="loadPreset('travel')" class="px-3 py-1.5 text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 hover:border-amber-500/50 hover:text-amber-400 rounded-xl transition">
+          ⚠️ International Travel ($450)
+        </button>
+        <button onclick="loadPreset('fraud')" class="px-3 py-1.5 text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 hover:border-rose-500/50 hover:text-rose-400 rounded-xl transition">
+          🚨 High-Risk Carding Attack ($950)
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Input Telemetry Form -->
+      <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-xl">
+        <h2 class="text-base font-semibold text-slate-200 mb-5 flex items-center gap-2">
+          <span>🎛️</span> Transaction Telemetry Parameters
+        </h2>
+
+        <div class="space-y-4 text-sm">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Transaction Amount ($)</label>
+              <input id="txn_amount" type="number" step="0.01" value="950" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">30-Day User Avg ($)</label>
+              <input id="user_avg_amount_30d" type="number" step="0.01" value="110" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Distance From Home (km)</label>
+              <input id="distance_from_home_km" type="number" step="0.1" value="145" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Txns in Last 1 Hour</label>
+              <input id="txn_count_last_1hr" type="number" value="5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Hour (0–23)</label>
+              <input id="hour_of_day" type="number" min="0" max="23" value="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">International</label>
+              <select id="is_international" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition">
+                <option value="1" selected>Yes (1)</option>
+                <option value="0">No (0)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Failed PINs</label>
+              <input id="failed_pin_attempts" type="number" min="0" max="5" value="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition" />
+            </div>
+          </div>
+
+          <button onclick="analyzeTransaction()" class="w-full mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2">
+            <span>🚀 Run Real-Time Evaluation</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Results & Analytics -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- KPI Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Fraud Probability</p>
+            <p id="prob_display" class="text-3xl font-extrabold mt-2 text-cyan-400">--%</p>
+            <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-cyan-500/5 rounded-full blur-xl"></div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Decision Status</p>
+            <div class="mt-2">
+              <span id="status_display" class="text-xs font-bold px-3 py-1 rounded-lg inline-block bg-slate-800 text-slate-300 border border-slate-700">
+                Awaiting Input...
+              </span>
+            </div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inference Speed</p>
+            <p id="latency_display" class="text-2xl font-extrabold mt-2 text-emerald-400">-- ms</p>
+            <p id="ratio_display" class="text-xs text-slate-400 mt-1">Spend Ratio: --x</p>
+          </div>
+        </div>
+
+        <!-- SHAP Explainability Chart Card -->
+        <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-6 shadow-xl">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="text-base font-semibold text-slate-200">Explainable AI (SHAP TreeAttribution)</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Factors driving risk scoring (Positive = Fraud risk, Negative = Safe)</p>
+            </div>
+            <span class="text-xs font-mono bg-slate-800 px-2.5 py-1 rounded-lg text-slate-400 border border-slate-700">TreeExplainer</span>
+          </div>
+          <div class="h-60">
+            <canvas id="shapChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Live Audit Trail Table -->
+    <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-6 shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-semibold text-slate-200">Recent Session Audit Trail</h3>
+        <span class="text-xs text-slate-400">In-memory session log</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950/60 text-xs uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="px-4 py-3 rounded-l-xl">Timestamp</th>
+              <th class="px-4 py-3">Amount</th>
+              <th class="px-4 py-3">Risk Prob</th>
+              <th class="px-4 py-3">Decision</th>
+              <th class="px-4 py-3 rounded-r-xl">Latency</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody" class="divide-y divide-slate-800/60 text-xs">
+            <!-- Dynamic rows will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let shapChartInstance = null;
+
+    function loadPreset(type) {
+      if (type === 'normal') {
+        document.getElementById('txn_amount').value = 65;
+        document.getElementById('user_avg_amount_30d').value = 80;
+        document.getElementById('distance_from_home_km').value = 4.5;
+        document.getElementById('txn_count_last_1hr').value = 1;
+        document.getElementById('hour_of_day').value = 14;
+        document.getElementById('is_international').value = 0;
+        document.getElementById('failed_pin_attempts').value = 0;
+      } else if (type === 'travel') {
+        document.getElementById('txn_amount').value = 450;
+        document.getElementById('user_avg_amount_30d').value = 90;
+        document.getElementById('distance_from_home_km').value = 620;
+        document.getElementById('txn_count_last_1hr').value = 2;
+        document.getElementById('hour_of_day').value = 19;
+        document.getElementById('is_international').value = 1;
+        document.getElementById('failed_pin_attempts').value = 0;
+      } else {
+        document.getElementById('txn_amount').value = 950;
+        document.getElementById('user_avg_amount_30d').value = 110;
+        document.getElementById('distance_from_home_km').value = 145;
+        document.getElementById('txn_count_last_1hr').value = 5;
+        document.getElementById('hour_of_day').value = 3;
+        document.getElementById('is_international').value = 1;
+        document.getElementById('failed_pin_attempts').value = 2;
+      }
+      analyzeTransaction();
+    }
+
+    async function analyzeTransaction() {
+      const payload = {
+        txn_amount: parseFloat(document.getElementById('txn_amount').value),
+        user_avg_amount_30d: parseFloat(document.getElementById('user_avg_amount_30d').value),
+        distance_from_home_km: parseFloat(document.getElementById('distance_from_home_km').value),
+        txn_count_last_1hr: parseInt(document.getElementById('txn_count_last_1hr').value),
+        hour_of_day: parseInt(document.getElementById('hour_of_day').value),
+        is_international: parseInt(document.getElementById('is_international').value),
+        failed_pin_attempts: parseInt(document.getElementById('failed_pin_attempts').value)
+      };
+
+      try {
+        const res = await fetch('http://127.0.0.1:8000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        // Update KPIs
+        document.getElementById('prob_display').innerText = data.fraud_probability + '%';
+        document.getElementById('latency_display').innerText = data.latency_ms + ' ms';
+        document.getElementById('ratio_display').innerText =
+          'Spend Ratio: ' + data.engineered_features.amount_to_avg_ratio + 'x';
+
+        const statusEl = document.getElementById('status_display');
+        statusEl.innerText = data.risk_status;
+        if (data.risk_status.includes('HIGH')) {
+          statusEl.className = 'text-xs font-bold px-3 py-1 rounded-lg inline-block bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-lg shadow-rose-500/10';
+        } else if (data.risk_status.includes('MEDIUM')) {
+          statusEl.className = 'text-xs font-bold px-3 py-1 rounded-lg inline-block bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-lg shadow-amber-500/10';
+        } else {
+          statusEl.className = 'text-xs font-bold px-3 py-1 rounded-lg inline-block bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-lg shadow-emerald-500/10';
+        }
+
+        // Add to Audit Trail Table
+        const now = new Date().toLocaleTimeString();
+        const tbody = document.getElementById('auditTableBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-4 py-2.5 font-mono text-slate-400">${now}</td>
+          <td class="px-4 py-2.5 font-semibold text-slate-200">$${payload.txn_amount}</td>
+          <td class="px-4 py-2.5 font-bold text-cyan-400">${data.fraud_probability}%</td>
+          <td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${data.risk_status.includes('HIGH') ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : (data.risk_status.includes('MEDIUM') ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20')}">${data.risk_status}</span></td>
+          <td class="px-4 py-2.5 font-mono text-emerald-400">${data.latency_ms}ms</td>
+        `;
+        tbody.insertBefore(row, tbody.firstChild);
+        if (tbody.children.length > 5) tbody.removeChild(tbody.lastChild);
+
+        // Update SHAP Bar Chart
+        const labels = data.xai_top_drivers.map(d => `${d.feature} (${d.value})`);
+        const impacts = data.xai_top_drivers.map(d => d.shap_impact);
+        const colors = impacts.map(val => val > 0 ? 'rgba(244, 63, 94, 0.85)' : 'rgba(16, 185, 129, 0.85)');
+
+        const ctx = document.getElementById('shapChart').getContext('2d');
+        if (shapChartInstance) shapChartInstance.destroy();
+
+        shapChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'SHAP Impact',
+              data: impacts,
+              backgroundColor: colors,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+              y: { grid: { display: false }, ticks: { color: '#e2e8f0', font: { weight: '500', size: 11 } } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    window.onload = analyzeTransaction;
+  </script>
+</body>
+</html>
