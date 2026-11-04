@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: finguard-fraud-detection-xai
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python src/train_pipeline.py"
+    startCommand: "uvicorn api.app:app --host 0.0.0.0 --port $PORT"
